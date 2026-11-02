@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoMovimientoStock {
+  INGRESO
+  EGRESO
+  DEVOLUCION
+  AJUSTE
+}
+
+enum EstadoEntrega {
+  PREPARADA
+  ENTREGADA
+  CANCELADA
+}
+
+model Empleado {
+  id       String    @id @default(uuid()) @db.Uuid
+  nombre   String
+  apellido String
+  cuil     String    @unique
+  puesto   String?
+  activo   Boolean   @default(true)
+  entregas Entrega[]
+}
+
+model Categoria {
+  id      String   @id @default(uuid()) @db.Uuid
+  nombre  String   @unique
+  activo  Boolean  @default(true)
+  prendas Prenda[]
+}
+
+model Prenda {
+  id          String           @id @default(uuid()) @db.Uuid
+  nombre      String
+  descripcion String?
+  categoriaId String           @db.Uuid
+  categoria   Categoria        @relation(fields: [categoriaId], references: [id])
+  variantes   VariantePrenda[]
+  activo      Boolean          @default(true)
+}
+
+model VariantePrenda {
+  id              String            @id @default(uuid()) @db.Uuid
+  prendaId        String            @db.Uuid
+  prenda          Prenda            @relation(fields: [prendaId], references: [id])
+  talle           String?
+  color           String?
+  stockActual     Int               @default(0)
+  stockMinimo     Int               @default(0)
+  activo          Boolean           @default(true)
+  detallesEntrega DetalleEntrega[]
+  movimientos     MovimientoStock[]
+
+  @@unique([prendaId, talle, color])
+}
+
+model Entrega {
+  id                 String           @id @default(uuid()) @db.Uuid
+  empleadoId         String           @db.Uuid
+  empleado           Empleado         @relation(fields: [empleadoId], references: [id])
+  fechaPreparacion   DateTime         @default(now())
+  estado             EstadoEntrega    @default(PREPARADA)
+  fechaEntrega       DateTime?
+  planillaFirmada    Boolean          @default(false)
+  fechaFirmaPlanilla DateTime?
+  observacion        String?
+  detalles           DetalleEntrega[]
+}
+
+model DetalleEntrega {
+  id               String            @id @default(uuid()) @db.Uuid
+  entregaId        String            @db.Uuid
+  entrega          Entrega           @relation(fields: [entregaId], references: [id])
+  variantePrendaId String            @db.Uuid
+  variantePrenda   VariantePrenda    @relation(fields: [variantePrendaId], references: [id])
+  cantidad         Int
+  movimientosStock MovimientoStock[]
+}
+
+model MovimientoStock {
+  id               String              @id @default(uuid()) @db.Uuid
+  variantePrendaId String              @db.Uuid
+  variantePrenda   VariantePrenda      @relation(fields: [variantePrendaId], references: [id])
+  tipo             TipoMovimientoStock
+  cantidad         Int
+  fecha            DateTime            @default(now())
+  motivo           String?
+  detalleEntregaId String?             @db.Uuid
+  detalleEntrega   DetalleEntrega?     @relation(fields: [detalleEntregaId], references: [id])
+}
