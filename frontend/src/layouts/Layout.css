@@ -107,19 +107,19 @@
 .menu-item:hover,
 .menu-section__toggle:hover,
 .menu-submenu__item:hover {
-  background: rgba(245, 162, 91, 0.17);
+  background: var(--primary-soft);
 }
 
 .menu-item--active,
 .menu-submenu__item--active {
   color: #1f1f1f;
-  background: #f5a25b;
+  background: var(--primary);
   font-weight: 750;
 }
 
 .menu-item--active:hover,
 .menu-submenu__item--active:hover {
-  background: #f5a25b;
+  background: var(--primary);
 }
 
 .menu-item__icon {
@@ -134,12 +134,12 @@
 .menu-item--quick {
   margin-top: 3px;
   color: #2a2119;
-  background: rgba(245, 162, 91, 0.42);
+  background: var(--primary-quick);
 }
 
 .menu-item--quick:hover,
 .menu-item--quick-active {
-  background: #f5a25b;
+  background: var(--primary);
 }
 
 .menu-item--quick-active {
@@ -207,6 +207,15 @@
 .menu-overlay--visible {
   visibility: visible;
   opacity: 1;
+}
+
+.menu-item,
+.menu-submenu__item {
+  text-decoration: none;
+}
+
+.menu-submenu__item {
+  display: block;
 }
 
 @media (max-width: 700px) {

@@ -1,4 +1,4 @@
-export type EstadoEntrega = 'PREPARADA' | 'ENTREGADA' | 'CANCELADA';
+export type EstadoEntrega = "PREPARADA" | "ENTREGADA" | "CANCELADA";
 
 export interface EmpleadoResumen {
   id: string;

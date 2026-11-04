@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
-import { EstadoEntregaBadge } from '../components/EstadoEntregaBadge';
-import { listarEntregas } from '../services/entregas.service';
-import type { Entrega, EstadoEntrega } from '../types/entrega';
+import { useEffect, useState } from "react";
+import { EstadoEntregaBadge } from "../components/EstadoEntregaBadge";
+import { listarEntregas } from "../services/entregas.service";
+import type { Entrega, EstadoEntrega } from "../types/entrega";
 
-const formatoFecha = new Intl.DateTimeFormat('es-AR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
+const formatoFecha = new Intl.DateTimeFormat("es-AR", {
+  dateStyle: "medium",
+  timeStyle: "short",
 });
 
 function formatearFecha(fecha: string | null) {
-  return fecha ? formatoFecha.format(new Date(fecha)) : '—';
+  return fecha ? formatoFecha.format(new Date(fecha)) : "—";
 }
 
-function describirVariante(detalle: Entrega['detalles'][number]) {
+function describirVariante(detalle: Entrega["detalles"][number]) {
   const datos = [
     detalle.variantePrenda.talle
       ? `Talle ${detalle.variantePrenda.talle}`
@@ -20,14 +20,14 @@ function describirVariante(detalle: Entrega['detalles'][number]) {
     detalle.variantePrenda.color,
   ].filter(Boolean);
 
-  return datos.length > 0 ? datos.join(' · ') : 'Sin talle ni color';
+  return datos.length > 0 ? datos.join(" · ") : "Sin talle ni color";
 }
 
 export function EntregasPage() {
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [estadoSeleccionado, setEstadoSeleccionado] = useState<
-    EstadoEntrega | ''
-  >('');
+    EstadoEntrega | ""
+  >("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
@@ -52,7 +52,7 @@ export function EntregasPage() {
         setError(
           errorDesconocido instanceof Error
             ? errorDesconocido.message
-            : 'Ocurrió un error inesperado.',
+            : "Ocurrió un error inesperado.",
         );
       } finally {
         if (!controller.signal.aborted) setCargando(false);
@@ -76,7 +76,7 @@ export function EntregasPage() {
 
         <div className="summary-card" aria-live="polite">
           <span className="summary-card__value">
-            {cargando ? '…' : entregas.length}
+            {cargando ? "…" : entregas.length}
           </span>
           <span className="summary-card__label">resultados visibles</span>
         </div>
@@ -95,7 +95,9 @@ export function EntregasPage() {
               <select
                 value={estadoSeleccionado}
                 onChange={(event) => {
-                  setEstadoSeleccionado(event.target.value as EstadoEntrega | '');
+                  setEstadoSeleccionado(
+                    event.target.value as EstadoEntrega | "",
+                  );
                   setEntregaAbierta(null);
                 }}
               >
@@ -180,8 +182,8 @@ export function EntregasPage() {
                         <EstadoEntregaBadge estado={entrega.estado} />
                       </td>
                       <td data-label="Prendas">
-                        {cantidadTotal}{' '}
-                        {cantidadTotal === 1 ? 'unidad' : 'unidades'}
+                        {cantidadTotal}{" "}
+                        {cantidadTotal === 1 ? "unidad" : "unidades"}
                       </td>
                       <td className="action-cell">
                         <button
@@ -192,19 +194,19 @@ export function EntregasPage() {
                             setEntregaAbierta(estaAbierta ? null : entrega.id)
                           }
                         >
-                          {estaAbierta ? 'Ocultar' : 'Ver detalle'}
+                          {estaAbierta ? "Ocultar" : "Ver detalle"}
                         </button>
 
                         {estaAbierta && (
                           <div className="delivery-detail">
                             <div className="delivery-detail__meta">
                               <span>
-                                <strong>Fecha de entrega:</strong>{' '}
+                                <strong>Fecha de entrega:</strong>{" "}
                                 {formatearFecha(entrega.fechaEntrega)}
                               </span>
                               <span>
-                                <strong>Planilla firmada:</strong>{' '}
-                                {entrega.planillaFirmada ? 'Sí' : 'No'}
+                                <strong>Planilla firmada:</strong>{" "}
+                                {entrega.planillaFirmada ? "Sí" : "No"}
                               </span>
                             </div>
 
@@ -226,7 +228,7 @@ export function EntregasPage() {
 
                             {entrega.observacion && (
                               <p className="observation">
-                                <strong>Observación:</strong>{' '}
+                                <strong>Observación:</strong>{" "}
                                 {entrega.observacion}
                               </p>
                             )}

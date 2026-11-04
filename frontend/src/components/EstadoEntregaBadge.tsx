@@ -1,9 +1,9 @@
-import type { EstadoEntrega } from '../types/entrega';
+import type { EstadoEntrega } from "../types/entrega";
 
 const etiquetas: Record<EstadoEntrega, string> = {
-  PREPARADA: 'Preparada',
-  ENTREGADA: 'Entregada',
-  CANCELADA: 'Cancelada',
+  PREPARADA: "Preparada",
+  ENTREGADA: "Entregada",
+  CANCELADA: "Cancelada",
 };
 
 interface EstadoEntregaBadgeProps {
