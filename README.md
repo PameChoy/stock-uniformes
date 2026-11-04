@@ -32,6 +32,3 @@ El backend queda disponible en `http://localhost:3000`.
 
 El frontend utiliza actualmente la API local configurada en `src/config/api.ts`.
 
-## Seguridad
-
-Los archivos `.env` están excluidos del repositorio. Nunca se deben subir contraseñas, claves ni cadenas de conexión reales.
