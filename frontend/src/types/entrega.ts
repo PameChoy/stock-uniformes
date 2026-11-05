@@ -1,3 +1,5 @@
+//describe la forma que esperamos que tengan
+//los objetos de tipo Entrega que recibimos del backend
 export type EstadoEntrega = "PREPARADA" | "ENTREGADA" | "CANCELADA";
 
 export interface EmpleadoResumen {

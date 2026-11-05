@@ -12,6 +12,7 @@ type SeccionMenu = {
 
 const rutasPorOpcion: Partial<Record<string, string>> = {
   "Todas las entregas": "/entregas",
+  "Lista de empleados": "/empleados",
 };
 
 const secciones: SeccionMenu[] = [

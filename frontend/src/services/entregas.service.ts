@@ -1,3 +1,5 @@
+//hace peticiones al backend para obtener información sobre entregas
+
 import { API_URL } from "../config/api";
 import type { Entrega, EstadoEntrega } from "../types/entrega";
 
