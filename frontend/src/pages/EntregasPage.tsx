@@ -23,7 +23,11 @@ function describirVariante(detalle: Entrega["detalles"][number]) {
   return datos.length > 0 ? datos.join(" · ") : "Sin talle ni color";
 }
 
-export function EntregasPage() {
+//prop es un dato que un componente de React recibe desde afuera (desde otro archivo tmb)
+//type se usa para darle un nombre a la forma de los datos que recibe el componente
+type EntregasPageProps = { estadoFijo?: EstadoEntrega };
+
+export function EntregasPage({ estadoFijo }: EntregasPageProps) {
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [estadoSeleccionado, setEstadoSeleccionado] = useState<
     EstadoEntrega | ""
@@ -32,6 +36,8 @@ export function EntregasPage() {
   const [error, setError] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
   const [entregaAbierta, setEntregaAbierta] = useState<string | null>(null);
+
+  const estadoConsulta = estadoFijo ?? estadoSeleccionado;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -42,8 +48,8 @@ export function EntregasPage() {
 
       try {
         const resultado = await listarEntregas(
-          estadoSeleccionado || undefined,
-          controller.signal,
+          estadoConsulta || undefined,
+          controller.signal, //es la señal que le permite a fetch saber si tiene que cancelar una consulta que sigue en curso
         );
         setEntregas(resultado);
       } catch (errorDesconocido) {
@@ -61,7 +67,7 @@ export function EntregasPage() {
 
     void cargar();
     return () => controller.abort();
-  }, [estadoSeleccionado, recarga]);
+  }, [estadoConsulta, recarga]);
 
   return (
     <main className="app-shell">
@@ -90,23 +96,25 @@ export function EntregasPage() {
           </div>
 
           <div className="toolbar__actions">
-            <label className="filter-control">
-              <span>Estado</span>
-              <select
-                value={estadoSeleccionado}
-                onChange={(event) => {
-                  setEstadoSeleccionado(
-                    event.target.value as EstadoEntrega | "",
-                  );
-                  setEntregaAbierta(null);
-                }}
-              >
-                <option value="">Todos</option>
-                <option value="PREPARADA">Preparadas</option>
-                <option value="ENTREGADA">Entregadas</option>
-                <option value="CANCELADA">Canceladas</option>
-              </select>
-            </label>
+            {!estadoFijo && (
+              <label className="filter-control">
+                <span>Estado</span>
+                <select
+                  value={estadoSeleccionado}
+                  onChange={(event) => {
+                    setEstadoSeleccionado(
+                      event.target.value as EstadoEntrega | "",
+                    );
+                    setEntregaAbierta(null);
+                  }}
+                >
+                  <option value="">Todos</option>
+                  <option value="PREPARADA">Preparadas</option>
+                  <option value="ENTREGADA">Entregadas</option>
+                  <option value="CANCELADA">Canceladas</option>
+                </select>
+              </label>
+            )}
 
             <button
               className="button button--secondary"

@@ -3,7 +3,7 @@
 
 import { API_URL } from "../config/api"; //para pedir GET/empleados
 //API_URL guarda la dirección del backend http://localhost:3000
-import type { Empleado } from "../types/empleado";
+import type { Empleado, DatosCrearEmpleado } from "../types/empleado";
 
 export async function listarEmpleados(
   signal?: AbortSignal, //Es un parámetro opcional que recibe una señal para cancelar la consulta.
@@ -31,4 +31,28 @@ export async function listarEmpleados(
   }
 
   return datos as Empleado[];
+}
+
+export async function crearEmpleado(
+  datos: DatosCrearEmpleado,
+): Promise<Empleado> {
+  const respuesta = await fetch(`${API_URL}/empleados`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos),
+  });
+
+  if(respuesta.status === 409) {
+    throw new Error("Ya existe un empleado con ese CUIL.");
+  }
+
+  if(respuesta.status === 400) {
+    throw new Error("Revisar los datos del formulario.");
+  }
+
+  if(!respuesta.ok) {
+    throw new Error("No se pudo guardar el empleado.");
+  }
+
+  return (await respuesta.json()) as Empleado;
 }

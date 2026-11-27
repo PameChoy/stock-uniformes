@@ -11,8 +11,10 @@ type SeccionMenu = {
 };
 
 const rutasPorOpcion: Partial<Record<string, string>> = {
-  "Todas las entregas": "/entregas",
   "Lista de empleados": "/empleados",
+  "Nuevo empleado": "/empleados/nuevo",
+  "Todas las entregas": "/entregas",
+  "Pendientes de entrega": "/entregas/pendientes",
 };
 
 const secciones: SeccionMenu[] = [

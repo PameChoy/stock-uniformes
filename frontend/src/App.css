@@ -106,7 +106,17 @@
   font-weight: 700;
 }
 
-.filter-control select {
+.search-control {
+  display: grid;
+  gap: 6px;
+  min-width: 240px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.filter-control select,
+.search-control input {
   height: 42px;
   padding: 0 38px 0 12px;
   border: 1px solid var(--border-strong);
@@ -116,6 +126,16 @@
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.search-control input {
+  padding-right: 12px;
+}
+
+.filter-control select:focus,
+.search-control input:focus {
+  border-color: var(--primary);
+  outline: 3px solid color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 .button,
@@ -139,7 +159,8 @@
 }
 
 .button:hover:not(:disabled),
-.filter-control select:hover {
+.filter-control select:hover,
+.search-control input:hover {
   border-color: var(--primary);
 }
 
@@ -227,6 +248,25 @@ td strong {
 .estado-badge--cancelada {
   color: #a12d32;
   background: #fde5e7;
+}
+
+.estado-empleado {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.estado-empleado--activo {
+  color: #096b45;
+  background: #dcf7eb;
+}
+
+.estado-empleado--inactivo {
+  color: #5f686d;
+  background: #e9edef;
 }
 
 .delivery-detail {
@@ -349,9 +389,11 @@ td strong {
 
   .toolbar__actions {
     align-items: stretch;
+    flex-direction: column;
   }
 
-  .filter-control {
+  .filter-control,
+  .search-control {
     flex: 1;
     min-width: 0;
   }
@@ -369,17 +411,20 @@ td strong {
     box-sizing: border-box;
   }
 
-  .delivery-row {
+  .delivery-row,
+  .empleado-row {
     position: relative;
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
   }
 
-  .delivery-row:last-child {
+  .delivery-row:last-child,
+  .empleado-row:last-child {
     border-bottom: 0;
   }
 
-  .delivery-row td {
+  .delivery-row td,
+  .empleado-row td {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -389,7 +434,8 @@ td strong {
     text-align: right;
   }
 
-  .delivery-row td::before {
+  .delivery-row td::before,
+  .empleado-row td::before {
     content: attr(data-label);
     color: var(--text-muted);
     font-size: 0.72rem;
