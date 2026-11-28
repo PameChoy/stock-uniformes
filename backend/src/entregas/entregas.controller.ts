@@ -54,6 +54,11 @@ export class EntregasController {
   listarEntregas(@Query() filtros: ListarEntregasQueryDto) {
     return this.entregasService.listar(filtros.estado);
   }
+
+  @Patch(':entregaId/firmar-planilla')
+  registrarFirma(@Param('entregaId', ParseUUIDPipe) entregaId: string) {
+    return this.entregasService.registrarFirmaPlanilla(entregaId);
+  }
 }
 
 /*

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { EstadoEntregaBadge } from "../components/EstadoEntregaBadge";
-import { listarEntregas } from "../services/entregas.service";
+import { listarEntregas, marcarComoEntregada, registrarFirmaPlanilla } from "../services/entregas.service";
 import type { Entrega, EstadoEntrega } from "../types/entrega";
 
 const formatoFecha = new Intl.DateTimeFormat("es-AR", {
@@ -36,8 +36,17 @@ export function EntregasPage({ estadoFijo }: EntregasPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
   const [entregaAbierta, setEntregaAbierta] = useState<string | null>(null);
+  const [planillaFirmadaAlEntregar, setPlanillaFirmadaAlEntregar] = useState(false);
+  const [guardandoAccion, setGuardandoAccion] = useState(false);
+  const [errorConfirmacion, setErrorConfirmacion] = useState<string | null>(null);
 
   const estadoConsulta = estadoFijo ?? estadoSeleccionado;
+  const esVistaPendientes = estadoFijo === "PREPARADA";
+
+  const modalDetalle = useRef<HTMLDialogElement>(null);
+  const entregaSeleccionada = entregas.find(
+    (entrega) => entrega.id === entregaAbierta,
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -69,12 +78,62 @@ export function EntregasPage({ estadoFijo }: EntregasPageProps) {
     return () => controller.abort();
   }, [estadoConsulta, recarga]);
 
+  useEffect(() => {
+    const modal = modalDetalle.current;
+    if (!modal) return;
+
+    if (entregaSeleccionada && !modal.open) {
+      modal.showModal();
+    } else if (!entregaSeleccionada && modal.open) {
+      modal.close();
+    }
+  }, [entregaSeleccionada]);
+
+  async function confirmarEntrega() {
+    if (entregaSeleccionada?.estado !== "PREPARADA" || guardandoAccion) return;
+
+    setGuardandoAccion(true);
+    setErrorConfirmacion(null);
+
+    try {
+      await marcarComoEntregada(entregaSeleccionada.id, planillaFirmadaAlEntregar);
+      modalDetalle.current?.close();
+      setRecarga((valor) => valor + 1);
+    } catch (error) {
+      setErrorConfirmacion(
+        error instanceof Error ? error.message : "No se pudo confirmar la entrega.",
+      );
+    } finally {
+      setGuardandoAccion(false);
+    }
+  }
+
+  async function firmarPlanilla() {
+    if (entregaSeleccionada?.estado !== "ENTREGADA" || entregaSeleccionada.planillaFirmada || guardandoAccion) return;
+
+    setGuardandoAccion(true);
+    setErrorConfirmacion(null);
+
+    try {
+      await registrarFirmaPlanilla(entregaSeleccionada.id);
+      setRecarga((valor) => valor + 1);
+    } catch (error) {
+      setErrorConfirmacion(
+        error instanceof Error ? error.message : "No se pudo confirmar la firma.",
+      );
+    } finally {
+      setGuardandoAccion(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="page-header">
         <div>
           <p className="eyebrow">Sistema de stock de uniformes</p>
-          <h1>Entregas</h1>
+          <h1>
+            {esVistaPendientes ? "Pendientes de entrega" : "Todas las entregas"}
+          </h1>
           <p className="page-description">
             Consultá las entregas preparadas, completadas y canceladas.
           </p>
@@ -152,7 +211,9 @@ export function EntregasPage({ estadoFijo }: EntregasPageProps) {
 
         {!cargando && !error && entregas.length === 0 && (
           <div className="feedback">
-            No hay entregas para el estado seleccionado.
+            {esVistaPendientes
+              ? "No hay entregas pendientes."
+              : "No hay entregas para el estado seleccionado."}
           </div>
         )}
 
@@ -170,7 +231,6 @@ export function EntregasPage({ estadoFijo }: EntregasPageProps) {
               </thead>
               <tbody>
                 {entregas.map((entrega) => {
-                  const estaAbierta = entregaAbierta === entrega.id;
                   const cantidadTotal = entrega.detalles.reduce(
                     (total, detalle) => total + detalle.cantidad,
                     0,
@@ -197,51 +257,15 @@ export function EntregasPage({ estadoFijo }: EntregasPageProps) {
                         <button
                           className="text-button"
                           type="button"
-                          aria-expanded={estaAbierta}
-                          onClick={() =>
-                            setEntregaAbierta(estaAbierta ? null : entrega.id)
-                          }
+                          aria-haspopup="dialog"
+                          onClick={() => {
+                            setPlanillaFirmadaAlEntregar(false);
+                            setErrorConfirmacion(null);
+                            setEntregaAbierta(entrega.id);
+                          }}
                         >
-                          {estaAbierta ? "Ocultar" : "Ver detalle"}
+                          Ver detalle
                         </button>
-
-                        {estaAbierta && (
-                          <div className="delivery-detail">
-                            <div className="delivery-detail__meta">
-                              <span>
-                                <strong>Fecha de entrega:</strong>{" "}
-                                {formatearFecha(entrega.fechaEntrega)}
-                              </span>
-                              <span>
-                                <strong>Planilla firmada:</strong>{" "}
-                                {entrega.planillaFirmada ? "Sí" : "No"}
-                              </span>
-                            </div>
-
-                            <ul className="items-list">
-                              {entrega.detalles.map((detalle) => (
-                                <li key={detalle.id}>
-                                  <div>
-                                    <strong>
-                                      {detalle.variantePrenda.prenda.nombre}
-                                    </strong>
-                                    <span>{describirVariante(detalle)}</span>
-                                  </div>
-                                  <span className="item-quantity">
-                                    × {detalle.cantidad}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-
-                            {entrega.observacion && (
-                              <p className="observation">
-                                <strong>Observación:</strong>{" "}
-                                {entrega.observacion}
-                              </p>
-                            )}
-                          </div>
-                        )}
                       </td>
                     </tr>
                   );
@@ -251,6 +275,112 @@ export function EntregasPage({ estadoFijo }: EntregasPageProps) {
           </div>
         )}
       </section>
+      <dialog
+        ref={modalDetalle}
+        className="delivery-modal"
+        aria-labelledby="detalle-entrega-titulo"
+        onCancel={(event) => {
+          if (guardandoAccion) event.preventDefault();
+        }}
+        onClose={() => setEntregaAbierta(null)}
+      >
+        {entregaSeleccionada && (
+          <>
+            <header className="delivery-modal__header">
+              <h2 id="detalle-entrega-titulo">
+                {entregaSeleccionada.empleado.nombre}{" "}
+                {entregaSeleccionada.empleado.apellido}
+              </h2>
+              <EstadoEntregaBadge estado={entregaSeleccionada.estado} />
+            </header>
+
+            <div className="delivery-detail__meta">
+              <span>
+                <strong>Preparada el:</strong>{" "}
+                {formatearFecha(entregaSeleccionada.fechaPreparacion)}
+              </span>
+              {entregaSeleccionada.fechaEntrega && (
+                <span>
+                  <strong>Entregada el:</strong>{" "}
+                  {formatearFecha(entregaSeleccionada.fechaEntrega)}
+                </span>
+              )}
+              <span>
+                <strong>Planilla firmada:</strong>{" "}
+                {entregaSeleccionada.planillaFirmada ? "Sí" : "No"}
+              </span>
+              {entregaSeleccionada.fechaFirmaPlanilla && (
+                <span>
+                  <strong>Firmada el:</strong>{" "}
+                  {formatearFecha(entregaSeleccionada.fechaFirmaPlanilla)}
+                </span>
+              )}
+            </div>
+
+            <ul className="items-list">
+              {entregaSeleccionada.detalles.map((detalle) => (
+                <li key={detalle.id}>
+                  <div>
+                    <strong>{detalle.variantePrenda.prenda.nombre}</strong>
+                    <span>{describirVariante(detalle)}</span>
+                  </div>
+                  <span className="item-quantity">× {detalle.cantidad}</span>
+                </li>
+              ))}
+            </ul>
+
+            {entregaSeleccionada.observacion && (
+              <p className="observation">
+                <strong>Observación:</strong> {entregaSeleccionada.observacion}
+              </p>
+            )}
+            {entregaSeleccionada.estado === "PREPARADA" && (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={planillaFirmadaAlEntregar}
+                  disabled={guardandoAccion}
+                  onChange={(event) =>
+                    setPlanillaFirmadaAlEntregar(event.target.checked)
+                  }
+                /> La planilla ya está firmada 
+              </label>
+            )}
+            {errorConfirmacion && <p role="alert">{errorConfirmacion}</p>}
+            <footer className="delivery-modal__actions">
+              {entregaSeleccionada.estado === "PREPARADA" && (
+                <button
+                  className="button button--secondary"
+                  type="button"
+                  onClick={confirmarEntrega}
+                  disabled={guardandoAccion}
+                >
+                  {guardandoAccion ? "Confirmando…" : "Marcar como entregada"}
+                </button>
+              )}
+              {entregaSeleccionada.estado === "ENTREGADA" && !entregaSeleccionada.planillaFirmada && (
+                <button
+                  className="button button--secondary"
+                  type="button"
+                  onClick={firmarPlanilla}
+                  disabled={guardandoAccion || cargando}
+                >
+                  {guardandoAccion ? "Registrando…" : "Registrar firma de planilla"}
+                </button>
+              )}
+              <button
+                className="button button--secondary"
+                type="button"
+                disabled={guardandoAccion}
+                onClick={() => modalDetalle.current?.close()}
+              >
+                Cerrar
+              </button>
+
+            </footer>
+          </>
+        )}
+      </dialog>
     </main>
   );
 }

@@ -1,9 +1,13 @@
-//hace peticiones al backend para obtener información sobre entregas
+//Hace peticiones al backend para consultar y actualizar entregas.
 
 import { API_URL } from "../config/api";
 import type { Entrega, EstadoEntrega } from "../types/entrega";
 
-function obtenerMensajeError(data: unknown, estadoHttp: number) {
+function obtenerMensajeError(
+  data: unknown,
+  estadoHttp: number,
+  mensajePorDefecto = "No se pudieron consultar las entregas",
+) {
   if (typeof data === "object" && data !== null && "message" in data) {
     const mensaje = data.message;
 
@@ -16,7 +20,7 @@ function obtenerMensajeError(data: unknown, estadoHttp: number) {
     }
   }
 
-  return `No se pudieron consultar las entregas (error ${estadoHttp}).`;
+  return `${mensajePorDefecto} (error ${estadoHttp}).`;
 }
 
 export async function listarEntregas(
@@ -43,4 +47,37 @@ export async function listarEntregas(
   }
 
   return data as Entrega[];
+}
+
+export async function marcarComoEntregada(
+  entregaId: string,
+  planillaFirmada: boolean,
+): Promise<void> {
+  //La promesa, al completarse, no entrega un valor.
+  const respuesta = await fetch(`${API_URL}/entregas/${entregaId}/entregar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ planillaFirmada }),
+  });
+
+  if (!respuesta.ok) {
+    const datos: unknown = await respuesta.json().catch(() => null);
+    throw new Error(
+      obtenerMensajeError(datos, respuesta.status, "No se pudo confirmar la entrega",),
+    );
+  }
+}
+
+export async function registrarFirmaPlanilla(entregaId: string): Promise<void> {
+  const respuesta = await fetch(
+    `${API_URL}/entregas/${entregaId}/firmar-planilla`,
+    { method: "PATCH" },
+  );
+
+  if (!respuesta.ok) {
+    const datos: unknown = await respuesta.json().catch(() => null);
+    throw new Error(
+      obtenerMensajeError(datos, respuesta.status, "No se pudo registrar la firma",),
+    );
+  }
 }

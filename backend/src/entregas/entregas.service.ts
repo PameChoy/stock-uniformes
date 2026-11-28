@@ -361,6 +361,43 @@ export class EntregasService {
     });
   }
 
+  async registrarFirmaPlanilla(entregaId: string) {
+    const entrega = await this.buscarEntrega(entregaId);
+    if(entrega.estado !== "ENTREGADA") {
+      throw new ConflictException("Solo se puede registrar la firma de una entrega ya entregada")
+    } 
+
+    if(entrega.planillaFirmada) {
+      throw new ConflictException("La planilla ya está firmada")
+    }
+
+    const fechaFirmaPlanilla = new Date();
+
+    const resultado = await this.prisma.entrega.updateMany({
+      where: {
+        id: entregaId,
+        estado: "ENTREGADA",
+        planillaFirmada: false,
+      },
+      data: {
+        planillaFirmada: true,
+        fechaFirmaPlanilla,
+      },
+    });
+
+    if (resultado.count !== 1) {
+      throw new ConflictException(
+        'La entrega cambió. Actualizá el detalle antes de volver a intentar.',
+      );
+    }
+
+    return {
+      id: entregaId,
+      planillaFirmada: true,
+      fechaFirmaPlanilla,
+    };
+  }
+
   private async buscarEntrega(entregaId: string) {
     const entrega = await this.prisma.entrega.findUnique({
       where: {
@@ -370,6 +407,7 @@ export class EntregasService {
         id: true,
         estado: true,
         fechaEntrega: true,
+        planillaFirmada: true,
       },
     });
 
